@@ -1,0 +1,7 @@
+{
+  "name": "Copy of Market Intel - Strategic Sourcing Dashboard",
+  "description": "A high-performance commodity market analysis dashboard for strategic sourcing, featuring real-time forecasts for Wheat and Palm Oil with AI-driven insights.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

@@ -1,0 +1,278 @@
+
+<!DOCTYPE html>
+<html lang="ja" class="dark">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Market Intel - 2026 Market Analysis</title>
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Noto+Sans+JP:wght@100..900&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2d687b",
+                        "primary-light": "#3e8a9e",
+                        "primary-dark": "#1f4a59",
+                        "primary-hover": "#3a8299",
+                        "secondary": "#bfa15f",
+                        "background-light": "#f7f7f7",
+                        "background-dark": "#121212",
+                        "surface-dark": "#1E1E1E",
+                        "surface-highlight": "#2A2A2A",
+                        "surface-lighter": "#242628",
+                        "text-main": "#E0E0E0",
+                        "text-muted": "#a3afb2",
+                        "accent-green": "#4CAF50",
+                        "accent-red": "#D32F2F",
+                        "border-color": "#333333",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "Noto Sans JP", "sans-serif"],
+                        "heading": ["Space Grotesk", "sans-serif"],
+                        "mono": ["Space Grotesk", "monospace"],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body { margin: 0; padding: 0; scrollbar-gutter: stable; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #121212; }
+        ::-webkit-scrollbar-thumb { background: #2d687b; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3e8a9e; }
+        .recharts-cartesian-grid-horizontal line, .recharts-cartesian-grid-vertical line { stroke: #333; }
+    </style>
+
+    <!-- Import Map for ESM -->
+    <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@19.0.0",
+    "react-dom": "https://esm.sh/react-dom@19.0.0",
+    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
+    "react-router-dom": "https://esm.sh/react-router-dom@6.28.0",
+    "recharts": "https://esm.sh/recharts@2.15.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/"
+  }
+}
+</script>
+</head>
+<body class="bg-background-dark text-white font-display overflow-hidden selection:bg-primary selection:text-white">
+    <div id="root"></div>
+
+    <script type="module">
+        import React, { useState, useEffect } from 'react';
+        import ReactDOM from 'react-dom/client';
+        import { HashRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
+        import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+
+        // --- Data Mockups ---
+        const wheatData = [
+            { name: 'Jan', price: 6.8, cbot: 6.2, fob: 6.8 },
+            { name: 'Feb', price: 7.0, cbot: 6.3, fob: 6.9 },
+            { name: 'Mar', price: 6.9, cbot: 6.1, fob: 6.75 },
+            { name: 'Apr', price: 7.2, cbot: 6.5, fob: 7.1 },
+            { name: 'May', price: 7.4, cbot: 6.7, fob: 7.3 },
+            { name: 'Jun', price: 7.5, cbot: 6.45, fob: 7.12 },
+        ];
+
+        const palmData = [
+            { name: 'Jan', price: 4200, ref: 4100 },
+            { name: 'Feb', price: 4100, ref: 4050 },
+            { name: 'Mar', price: 3950, ref: 3900 },
+            { name: 'Apr', price: 3900, ref: 3850 },
+            { name: 'May', price: 3850, ref: 3800 },
+            { name: 'Jun', price: 3800, ref: 3750 },
+        ];
+
+        // --- Components ---
+
+        const Sidebar = () => {
+            const location = useLocation();
+            const isActive = (path) => location.pathname === path ? "bg-primary text-white" : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white";
+            
+            return (
+                <aside className="w-20 lg:w-64 flex flex-col border-r border-[#2A2A2A] bg-[#161616] h-screen shrink-0 transition-all">
+                    <div className="p-4 flex flex-col gap-8">
+                        <div className="flex items-center gap-3 px-2">
+                            <div className="size-10 rounded-full border border-[#2A2A2A] bg-cover bg-center" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuC6gSdX3HBZgrnXIE682CpB_ftW2iGKDanZ0ubkcZuKqIsviAS0bf9gL5jpZ_HVbZdqm7qHUjSV0tYFJk8wDXJGs0QSJ4u-LwkWrBVvWAsgGHNjgbUWm0h-qDuhAVgWgchGwW_8qVD_ar42ZQOQSvZJf8dhtR0T1vPK3WUlu2mplfE1A2X8wfVJKBmrE4bRqOF2mpJIOekBMW5C-HjAzI9qgoOfPltpF1SVgqhCh1fLJxBaYgEjdvMO0clQdbtrfDVOjRI0K4qN7_U")'}}></div>
+                            <div className="hidden lg:block">
+                                <h1 className="text-white text-sm font-bold tracking-wide uppercase font-heading">Market<span className="text-primary">Intel</span></h1>
+                            </div>
+                        </div>
+                        <nav className="flex flex-col gap-2">
+                            <Link to="/" className={`flex items-center gap-4 px-3 py-3 rounded-xl transition-all ${isActive('/')}`}>
+                                <span className="material-symbols-outlined">dashboard</span>
+                                <span className="hidden lg:block text-sm">市場概要</span>
+                            </Link>
+                            <Link to="/wheat" className={`flex items-center gap-4 px-3 py-3 rounded-xl transition-all ${isActive('/wheat')}`}>
+                                <span className="material-symbols-outlined">grass</span>
+                                <span className="hidden lg:block text-sm">小麦分析</span>
+                            </Link>
+                            <Link to="/palm" className={`flex items-center gap-4 px-3 py-3 rounded-xl transition-all ${isActive('/palm')}`}>
+                                <span className="material-symbols-outlined">water_drop</span>
+                                <span className="hidden lg:block text-sm">パーム油分析</span>
+                            </Link>
+                        </nav>
+                    </div>
+                </aside>
+            );
+        };
+
+        const TopHeader = () => (
+            <header className="h-16 border-b border-[#2A2A2A] bg-[#121212]/80 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-10">
+                <div className="flex items-center gap-4">
+                    <span className="material-symbols-outlined text-gray-500">search</span>
+                    <input className="bg-transparent border-none text-sm text-white focus:ring-0 w-64" placeholder="市場を検索..." />
+                </div>
+                <div className="flex items-center gap-4">
+                    <div className="size-8 rounded-full border border-gray-700 bg-cover bg-center" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuAEI9M4R812r4WFz5WYLThNtIv3o1e4MEOr5ZRyo_AAMxfvr9zYv6JEvV1X7D5eNhhtITlm9cbzTuFW3dO1QSf9o8taYiK8Vt_fn2crQHR2E3MvpasMiPJr8RCaVkfYPuD0i3KFuWsxB6a8qhNo39O8SpjeKTgxZJ7iztOmpfnT_Haqjz87LfYuxq0l_Jr7twc3CCuxFkw10BKvj_VBf0oam20yJngv65IwI7eq29hjQsjqqy3pFS2tKQZpqqzLyVM3JOCf0ds2Cno")'}}></div>
+                </div>
+            </header>
+        );
+
+        // --- Screens ---
+
+        const Dashboard = () => (
+            <div className="p-6 lg:p-10 space-y-8 pb-20">
+                <div>
+                    <h2 className="text-primary font-heading font-bold text-sm uppercase mb-1">Procurement Strategy</h2>
+                    <h1 className="text-3xl lg:text-4xl font-bold text-white tracking-tight">2026年 市場展望レポート</h1>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {[
+                        { label: '世界インフレ率予測', val: '3.2%', change: '-0.5% YoY', icon: 'public', color: 'text-primary' },
+                        { label: '海上運賃指数 (BDI)', val: '1,450', change: '+1.2% MoM', icon: 'directions_boat', color: 'text-secondary' },
+                        { label: '総合リスクスコア', val: 'Medium', change: 'Stable', icon: 'shield', color: 'text-gray-400' }
+                    ].map((kpi, i) => (
+                        <div key={i} className="bg-[#1E1E1E] p-5 rounded-2xl border border-[#2A2A2A] h-32 flex flex-col justify-between">
+                            <div className="flex justify-between items-start">
+                                <span className="text-gray-400 text-sm font-medium">{kpi.label}</span>
+                                <span className={`material-symbols-outlined ${kpi.color}`}>{kpi.icon}</span>
+                            </div>
+                            <div>
+                                <span className="text-3xl font-bold text-white font-heading">{kpi.val}</span>
+                                <span className="ml-2 text-xs text-emerald-400">{kpi.change}</span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <section className="space-y-4">
+                        <Link to="/wheat" className="flex items-center gap-2 group">
+                            <div className="size-2 rounded-full bg-primary"></div>
+                            <h3 className="text-xl font-bold group-hover:text-primary transition-colors">WHEAT / 小麦</h3>
+                        </Link>
+                        <div className="bg-[#1E1E1E] rounded-2xl border border-[#2A2A2A] p-6 h-[300px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={wheatData}>
+                                    <defs>
+                                        <linearGradient id="colorWheat" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#2d687b" stopOpacity={0.8}/>
+                                            <stop offset="95%" stopColor="#2d687b" stopOpacity={0}/>
+                                        </linearGradient>
+                                    </defs>
+                                    <Tooltip contentStyle={{ backgroundColor: '#1E1E1E', border: '1px solid #2A2A2A' }} />
+                                    <Area type="monotone" dataKey="price" stroke="#2d687b" fill="url(#colorWheat)" strokeWidth={3} />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </section>
+                    <section className="space-y-4">
+                        <Link to="/palm" className="flex items-center gap-2 group">
+                            <div className="size-2 rounded-full bg-secondary"></div>
+                            <h3 className="text-xl font-bold group-hover:text-secondary transition-colors">PALM OIL / パーム油</h3>
+                        </Link>
+                        <div className="bg-[#1E1E1E] rounded-2xl border border-[#2A2A2A] p-6 h-[300px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={palmData}>
+                                    <defs>
+                                        <linearGradient id="colorPalm" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#bfa15f" stopOpacity={0.8}/>
+                                            <stop offset="95%" stopColor="#bfa15f" stopOpacity={0}/>
+                                        </linearGradient>
+                                    </defs>
+                                    <Tooltip contentStyle={{ backgroundColor: '#1E1E1E', border: '1px solid #2A2A2A' }} />
+                                    <Area type="monotone" dataKey="price" stroke="#bfa15f" fill="url(#colorPalm)" strokeWidth={3} />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        );
+
+        const WheatScreen = () => (
+            <div className="p-6 lg:p-10 space-y-6">
+                <h1 className="text-3xl font-bold font-heading">小麦市場詳細分析</h1>
+                <div className="bg-surface-dark border border-border-color rounded-xl p-6 h-[450px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={wheatData}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="name" stroke="#666" fontSize={12} />
+                            <YAxis stroke="#666" fontSize={12} />
+                            <Tooltip contentStyle={{ backgroundColor: '#1E1E1E', border: '1px solid #333' }} />
+                            <Legend />
+                            <Area name="CBOT Futures" type="monotone" dataKey="cbot" stroke="#2d687b" fill="#2d687b" fillOpacity={0.2} strokeWidth={3} />
+                            <Area name="FOB Physical" type="monotone" dataKey="fob" stroke="#888" fill="none" strokeWidth={2} strokeDasharray="5 5" />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                </div>
+            </div>
+        );
+
+        const PalmScreen = () => (
+            <div className="p-6 lg:p-10 space-y-6">
+                <h1 className="text-3xl font-bold font-heading">パーム油市場詳細分析</h1>
+                <div className="bg-surface-dark border border-border-color rounded-xl p-6 h-[400px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={palmData}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="name" stroke="#666" fontSize={12} />
+                            <YAxis stroke="#666" fontSize={12} />
+                            <Tooltip contentStyle={{ backgroundColor: '#1E1E1E', border: '1px solid #333' }} />
+                            <Area type="monotone" dataKey="price" stroke="#bfa15f" fill="#bfa15f" fillOpacity={0.2} strokeWidth={3} />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                </div>
+            </div>
+        );
+
+        // --- Main App ---
+
+        const App = () => (
+            <HashRouter>
+                <div className="flex h-screen bg-background-dark text-white overflow-hidden">
+                    <Sidebar />
+                    <div className="flex-1 flex flex-col overflow-hidden">
+                        <TopHeader />
+                        <main className="flex-1 overflow-y-auto">
+                            <Routes>
+                                <Route path="/" element={<Dashboard />} />
+                                <Route path="/wheat" element={<WheatScreen />} />
+                                <Route path="/palm" element={<PalmScreen />} />
+                            </Routes>
+                        </main>
+                    </div>
+                </div>
+            </HashRouter>
+        );
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
